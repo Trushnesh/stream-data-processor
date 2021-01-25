@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "stream-data-processor.name" . }}
+  labels:
+{{- include "stream-data-processor.labels" . | indent 4 }}
+data:
+  application.properties: |
+    kafka.enabled={{.Values.kafka.enabled}}
+    kafka.bootstrapAddress={{.Values.kafka.bootstrapAddress}}
+    verbose={{.Values.verbose}}

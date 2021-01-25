@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "stream-data-processor.name" . }}
+  labels:
+{{ include "stream-data-processor.labels" . | indent 4 }}
+spec:
+  serviceName: {{ template "stream-data-processor.name" . }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "stream-data-processor.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "stream-data-processor.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        prometheus.io/scrape: {{ .Values.prom.enabled | quote }}
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: Always
+          volumeMounts:
+          - name: {{ template "stream-data-processor.name" . }}
+            mountPath: /opt
+      volumes:
+      - name: {{ template "stream-data-processor.name" . }}
+        configMap:
+          name: {{ template "stream-data-processor.name" . }}
